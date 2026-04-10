@@ -1166,7 +1166,7 @@ function renderLowCSAT(d) {
   const items = d.low_csat.filter(i => i.score < 4);
   if (!items.length) { el.innerHTML = '<div class="empty">Sin valoraciones bajas en este período ✓</div>'; return; }
   el.innerHTML = items.map(item => {
-    const wsBadge = item.ws === 'choiz' ? DB.choiz.wsBadge : DB.timeless.wsBadge;
+    const wsBadge = item.ws === 'choiz' ? '<span class="ws-badge-c">Choiz</span>' : '<span class="ws-badge-t">Timeless</span>';
     const remarkEl = item.remark ? `<div class="low-remark">"${item.remark}"</div>` : '';
     const sentColor = item.sentiment === 'Negative' ? 'var(--danger)' : 'var(--subtle)';
     const accionablesEl = item.accionables && item.accionables.length
@@ -1223,15 +1223,19 @@ function renderAgentsDetail(d) {
 }
 
 function renderBanner(d) {
-  const periods = { day:'Hoy, 9 Abril 2026', week:'Semana: 1 – 9 Abril 2026', month:'Mes: Abril 2026' };
-  document.getElementById('banner-title').textContent = periods[period];
+  const snapC = SNAPSHOTS[currentSnapshot]?.choiz;
+  const snapT = SNAPSHOTS[currentSnapshot]?.timeless;
   const pillC = document.getElementById('pill-choiz');
   const pillT = document.getElementById('pill-tless');
   if (wsFilter === 'timeless') { pillC.classList.add('hidden'); pillT.classList.remove('hidden'); }
   else if (wsFilter === 'choiz') { pillT.classList.add('hidden'); pillC.classList.remove('hidden'); }
   else { pillC.classList.remove('hidden'); pillT.classList.remove('hidden'); }
-  pillC.textContent = `Choiz · ${DB.choiz.kpis.total.v} tickets`;
-  pillT.textContent = `Timeless · ${DB.timeless.kpis.total.v} tickets`;
+  if (snapC) pillC.textContent = `Choiz · ${snapC.kpis.total.v} tickets`;
+  if (snapT) pillT.textContent = `Timeless · ${snapT.kpis.total.v} tickets`;
+  if (!customDateActive) {
+    const labels = { day:'Hoy, 10 Abril 2026', week:'Semana: 1 – 9 Abril 2026', month:'Marzo 2026', year:'Enero – Abril 2026' };
+    document.getElementById('banner-title').textContent = labels[period] || labels.year;
+  }
 }
 
 function render() {
