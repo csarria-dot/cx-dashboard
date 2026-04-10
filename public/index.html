@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CX Operaciones · Choiz & Timeless</title>
+<style>
+  :root {
+    /* ── Paleta Choiz brand — light/violet system ── */
+    --choiz: #6B3FA0;
+    --choiz-mid: #9B6FCA;
+    --choiz-dim: #F0EBF8;
+    --choiz-border: #D4BEEE;
+    --tless: #1A6B4A;
+    --tless-dim: #E4F4ED;
+    --tless-border: #A8D9C2;
+
+    /* ── Fondos ── */
+    --bg: #F7F5FB;
+    --surface: #FFFFFF;
+    --surface-2: #F0EBF8;
+    --surface-3: #E8E0F2;
+
+    /* ── Bordes ── */
+    --border: #DDD5EE;
+    --border-soft: #EDE7F6;
+
+    /* ── Texto ── */
+    --text: #1C1428;
+    --muted: #6B5F80;
+    --subtle: #A497B8;
+
+    /* ── Semánticos ── */
+    --danger: #C0392B;
+    --danger-dim: #FDECEA;
+    --warn: #9A6A00;
+    --warn-dim: #FDF3DC;
+    --good: #1A6B4A;
+    --good-dim: #E4F4ED;
+
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .brand-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--good);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .updated { font-size: 11px; color: var(--subtle); }
+
+  /* ── CONTROLS ── */
+  .controls {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .controls-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+  .btn-group {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .btn-group button {
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .15s;
+  }
+  .btn-group button:last-child { border-right: none; }
+  .btn-group button:hover { background: var(--surface-2); color: var(--text); }
+  .btn-group button.active { background: var(--surface-3); color: var(--text); font-weight: 600; }
+
+  .ws-group {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .ws-btn {
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .15s;
+  }
+  .ws-btn:last-child { border-right: none; }
+  .ws-btn.active-choiz { background: var(--choiz-dim); color: var(--choiz); border-color: var(--choiz-border); }
+  .ws-btn.active-tless { background: var(--tless-dim); color: var(--tless); border-color: var(--tless-border); }
+  .ws-btn.active-all   { background: var(--surface-3); color: var(--text); }
+
+  .refresh-btn {
+    margin-left: auto;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .15s;
+  }
+  .refresh-btn:hover { background: var(--surface-2); }
+  .refresh-btn.loading { opacity: 0.4; pointer-events: none; }
+  .spin { display: inline-block; }
+  .spin.spinning { animation: spin .7s linear infinite; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  .period-hint { font-size: 11px; color: var(--subtle); }
+
+  /* ── MAIN ── */
+  .main { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+
+  /* ── RANGE BANNER ── */
+  .range-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .range-title { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+  .range-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .range-pills { display: flex; gap: 8px; }
+  .rp { padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+  .rp-choiz { background: var(--choiz-dim); color: var(--choiz); border: 1px solid var(--choiz-border); }
+  .rp-tless { background: var(--tless-dim); color: var(--tless); border: 1px solid var(--tless-border); }
+
+  /* ── SECTION TITLE ── */
+  .sec {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--subtle);
+    margin: 24px 0 12px;
+  }
+
+  /* ── METRIC GRID ── */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+  }
+  .metric-label { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .metric-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--text);
+  }
+  .metric-value.good   { color: var(--good); }
+  .metric-value.warn   { color: var(--warn); }
+  .metric-value.danger { color: var(--danger); }
+  .metric-delta {
+    font-size: 11px;
+    margin-top: 5px;
+    font-weight: 500;
+  }
+
+  /* ── GRIDS ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 900px) { .three-col { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .three-col { grid-template-columns: 1fr; } }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .card-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--subtle);
+    margin-bottom: 14px;
+  }
+  .card-full { grid-column: 1 / -1; }
+
+  /* ── CSAT ── */
+  .csat-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .csat-big {
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .csat-num {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .csat-lbl { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .csat-good { color: var(--good); }
+  .csat-warn { color: var(--warn); }
+  .csat-bad  { color: var(--danger); }
+
+  .star-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+  .star-label { font-size: 12px; color: var(--muted); width: 16px; text-align: right; flex-shrink: 0; }
+  .star-track {
+    flex: 1;
+    height: 7px;
+    background: var(--surface-2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .star-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+  .fill-5 { background: var(--good); }
+  .fill-4 { background: #97C459; }
+  .fill-3 { background: #EF9F27; }
+  .fill-2 { background: #D85A30; }
+  .fill-1 { background: var(--danger); }
+  .star-count { font-size: 11px; color: var(--subtle); width: 22px; text-align: right; }
+
+  /* ── VS SEMANA ANTERIOR ── */
+  .vs-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  .vs-row:last-child { border-bottom: none; }
+  .vs-label { flex: 1; color: var(--muted); font-size: 12px; }
+  .vs-this { font-weight: 700; color: var(--text); width: 40px; text-align: right; font-size: 13px; }
+  .vs-prev { color: var(--subtle); width: 36px; text-align: right; font-size: 12px; }
+  .vs-arrow { width: 22px; text-align: center; font-size: 12px; font-weight: 700; }
+  .arr-bad { color: var(--danger); }
+  .arr-good { color: var(--good); }
+  .arr-same { color: var(--subtle); }
+  .vs-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .vs-header span { font-size: 10px; font-weight: 700; color: var(--subtle); text-transform: uppercase; letter-spacing: .05em; }
+  .vs-header .vs-this { color: var(--text); }
+  .vs-header .vs-prev { color: var(--subtle); }
+
+  /* ── AGENTES ── */
+  .agent-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .agent-row:last-child { border-bottom: none; }
+  .agent-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .av-choiz   { background: var(--choiz-dim); color: var(--choiz); }
+  .av-tless   { background: var(--tless-dim); color: var(--tless); }
+  .av-neutral { background: var(--surface-2); color: var(--muted); }
+  .agent-info { flex: 1; }
+  .agent-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .agent-ws { font-size: 10px; color: var(--subtle); }
+  .agent-stats { display: flex; gap: 12px; }
+  .agent-stat { text-align: center; }
+  .agent-stat-val { font-size: 15px; font-weight: 700; color: var(--text); }
+  .agent-stat-lbl { font-size: 10px; color: var(--subtle); }
+
+  /* ── CSAT BAJAS ── */
+  .low-csat-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .low-csat-scroll::-webkit-scrollbar { width: 4px; }
+  .low-csat-scroll::-webkit-scrollbar-track { background: transparent; }
+  .low-csat-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .low-csat-item {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    border-left: 3px solid transparent;
+    background: #F5F5F7;
+  }
+  .low-csat-item.score-1 { border-left-color: var(--danger); }
+  .low-csat-item.score-2 { border-left-color: #E8825A; }
+  .low-csat-item.score-3 { border-left-color: var(--warn); }
+  .low-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .low-topic { font-size: 13px; font-weight: 700; color: var(--text); }
+  .low-issue { font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
+  .low-badges { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .score-badge { font-size: 11px; padding: 2px 8px; border-radius: 100px; font-weight: 700; }
+  .sb-1 { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(255,107,107,.25); }
+  .sb-2 { background: rgba(232,130,90,.12); color: #E8825A; border: 1px solid rgba(232,130,90,.25); }
+  .sb-3 { background: var(--warn-dim); color: var(--warn); border: 1px solid rgba(245,166,35,.25); }
+  .ws-badge-c { background: var(--choiz-dim); color: var(--choiz); border: 1px solid var(--choiz-border); font-size: 10px; padding: 2px 7px; border-radius: 100px; font-weight: 600; }
+  .ws-badge-t { background: var(--tless-dim); color: var(--tless); border: 1px solid var(--tless-border); font-size: 10px; padding: 2px 7px; border-radius: 100px; font-weight: 600; }
+  .low-meta { font-size: 11px; color: var(--subtle); display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .low-remark {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 8px;
+    padding: 5px 10px;
+    background: #EBEBED;
+    border-radius: 4px;
+    border-left: 2px solid var(--border);
+  }
+  .accionables-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--choiz);
+    margin-bottom: 5px;
+  }
+  .accionable-list { list-style: none; }
+  .accionable-list li {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 3px 0 3px 16px;
+    position: relative;
+    line-height: 1.4;
+  }
+  .accionable-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--choiz);
+    font-size: 11px;
+  }
+
+  /* ── TEMA CHIPS ── */
+  .topic-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
+  .topic-chip {
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip-n {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* ── IA RESOLUCIÓN ── */
+  .ia-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .ia-row:last-child { border-bottom: none; }
+  .ia-label { flex: 1; font-size: 12px; color: var(--muted); }
+  .ia-bar-wrap { width: 100px; height: 7px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+  .ia-bar { height: 100%; border-radius: 4px; }
+  .ia-pct { font-size: 13px; font-weight: 700; color: var(--text); width: 40px; text-align: right; }
+
+  /* ── TIEMPOS ── */
+  .time-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .time-table thead th {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--subtle);
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+  }
+  .time-table thead th:first-child { text-align: left; }
+  .time-table tbody tr { border-bottom: 1px solid var(--border-soft); }
+  .time-table tbody tr:last-child { border-bottom: none; }
+  .time-table tbody td {
+    padding: 9px 0;
+    vertical-align: middle;
+    text-align: right;
+  }
+  .time-table tbody td:first-child {
+    text-align: left;
+    color: var(--muted);
+    font-size: 12px;
+    padding-right: 16px;
+  }
+  .time-val {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    display: block;
+  }
+  .tc { color: var(--choiz); }
+  .tt { color: var(--tless); }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 16px 32px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--subtle);
+    border-top: 1px solid var(--border);
+    margin-top: 32px;
+  }
+
+  /* ── DATE RANGE PICKER ── */
+  .date-range {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .date-input {
+    padding: 5px 10px;
+    font-size: 12px;
+    font-family: inherit;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color .15s;
+    outline: none;
+  }
+  .date-input:focus { border-color: var(--choiz-border); }
+  .date-sep { font-size: 12px; color: var(--subtle); }
+  .date-apply {
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--choiz-dim);
+    border: 1px solid var(--choiz-border);
+    border-radius: var(--radius-sm);
+    color: var(--choiz);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .date-apply:hover { background: var(--choiz-border); }
+  .date-clear {
+    padding: 5px 8px;
+    font-size: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--subtle);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .date-clear:hover { color: var(--danger); border-color: var(--danger); }
+  .controls-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+
+  /* ── EMPTY / HIDDEN ── */
+  .empty { padding: 24px; text-align: center; color: var(--subtle); font-size: 13px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="brand-dot" style="background:var(--choiz)"></div>
+    Choiz
+    <span style="color:var(--border);font-weight:300;margin:0 2px">|</span>
+    <div class="brand-dot" style="background:var(--tless)"></div>
+    Timeless
+    <span style="color:var(--muted);font-weight:400;margin-left:6px;font-size:13px">— CX Operaciones</span>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div>Datos reales · Intercom</div>
+    <span class="updated" id="ts"></span>
+  </div>
+</header>
+
+<div class="controls">
+  <span class="controls-label">Workspace:</span>
+  <div class="ws-group">
+    <button class="ws-btn active-all" onclick="setWS('all',this)" id="ws-all">Todos</button>
+    <button class="ws-btn" onclick="setWS('choiz',this)" id="ws-choiz">Choiz</button>
+    <button class="ws-btn" onclick="setWS('timeless',this)" id="ws-tless">Timeless</button>
+  </div>
+  <div class="controls-divider"></div>
+  <span class="controls-label">Período:</span>
+  <div class="btn-group">
+    <button onclick="setPeriod('day',this)">Hoy</button>
+    <button onclick="setPeriod('week',this)" class="active">Semana</button>
+    <button onclick="setPeriod('month',this)">Mes</button>
+  </div>
+  <div class="controls-divider"></div>
+  <span class="controls-label">Personalizado:</span>
+  <div class="date-range">
+    <input type="date" class="date-input" id="date-from" value="2026-04-01">
+    <span class="date-sep">→</span>
+    <input type="date" class="date-input" id="date-to" value="2026-04-09">
+    <button class="date-apply" onclick="applyCustomDate()">Aplicar</button>
+    <button class="date-clear" id="date-clear-btn" onclick="clearCustomDate()" style="display:none">✕</button>
+  </div>
+  <span class="period-hint" id="period-hint">1 – 9 Abril 2026</span>
+  <button class="refresh-btn" id="refresh-btn" onclick="doRefresh()">
+    <span class="spin" id="spin-icon">↻</span> Actualizar
+  </button>
+</div>
+
+<div class="main">
+
+  <!-- BANNER -->
+  <div class="range-banner" id="range-banner">
+    <div>
+      <div class="range-title" id="banner-title">Semana: 1 – 9 Abril 2026</div>
+      <div class="range-sub">Datos extraídos de Intercom · Choiz (nrwita25) & Timeless (pm7zkt64)</div>
+    </div>
+    <div class="range-pills" id="banner-pills">
+      <span class="rp rp-choiz" id="pill-choiz">Choiz · 175 tickets</span>
+      <span class="rp rp-tless" id="pill-tless">Timeless · 27 tickets</span>
+    </div>
+  </div>
+
+  <!-- KPIs VOLUMEN -->
+  <div class="sec">Volumen de tickets</div>
+  <div class="metric-grid" id="kpi-grid"></div>
+
+  <!-- FILA 1: VS SEMANA + AGENTES -->
+  <div class="sec">Comparativa vs semana anterior</div>
+  <div class="two-col">
+    <div class="card" id="card-vs">
+      <div class="card-title">Semana actual vs anterior</div>
+      <div class="vs-header">
+        <span class="vs-label" style="flex:1"></span>
+        <span class="vs-this" style="font-size:10px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.05em">Esta sem.</span>
+        <span class="vs-arrow"></span>
+        <span class="vs-prev" style="font-size:10px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.05em">Ant.</span>
+      </div>
+      <div id="vs-rows"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Tiempos operativos</div>
+      <div id="time-rows"></div>
+    </div>
+  </div>
+
+  <!-- FILA 2: CSAT -->
+  <div class="sec">CSAT — Satisfacción del cliente</div>
+  <div class="three-col">
+    <div class="card">
+      <div class="card-title">Distribución CSAT</div>
+      <div class="csat-hero" id="csat-hero"></div>
+      <div id="csat-stars"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">CSAT por agente</div>
+      <div id="agent-csat"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Resolución IA (Fin)</div>
+      <div id="ia-resolution"></div>
+    </div>
+  </div>
+
+  <!-- FILA 3: CSAT BAJAS -->
+  <div class="sec">Valoraciones bajas (CSAT &lt; 4) — ¿De dónde viene la frustración?</div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="low-csat-scroll">
+      <div id="low-csat-list"></div>
+    </div>
+  </div>
+
+  <!-- FILA 4: TEMAS + AGENTES DETALLE -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Temas frecuentes (IA)</div>
+      <div class="topic-cloud" id="topics"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Carga por agente</div>
+      <div id="agents-detail"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer" id="footer-ts">
+  Dashboard CX · Operaciones · Actualizado: <span id="footer-time"></span>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const DB = {
+  choiz: {
+    label: 'Choiz',
+    bot: 'Lupe',
+    ws: 'nrwita25',
+    color: 'var(--choiz)',
+    accentClass: 'accent-choiz',
+    avClass: 'av-choiz',
+    wsBadge: '<span class="ws-badge-c">Choiz</span>',
+    kpis: {
+      total:         { v: 175, prev: 148, label: 'Total tickets',       higherIsBad: false },
+      abiertas:      { v: 11,  prev: 9,   label: 'Abiertas ahora',      higherIsBad: true  },
+      cerradas:      { v: 164, prev: 139, label: 'Cerradas',            higherIsBad: false },
+      fin_confirmed: { v: 42,  prev: 35,  label: 'Resuelto por IA',                  higherIsBad: false },
+      fin_assumed:   { v: 31,  prev: 28,  label: 'Cerrado sin respuesta del cliente', higherIsBad: false },
+      by_agent:      { v: 91,  prev: 76,  label: 'Handoff',                           higherIsBad: false },
+    },
+    csat: {
+      avg: 3.4, prev_avg: 3.1,
+      total: 74, positive: 38,
+      scores: { 5: 20, 4: 18, 3: 12, 2: 11, 1: 13 },
+      fin_csat: 3.8,
+      agents_csat: 3.1,
+    },
+    agents: [
+      { initials:'ZA', name:'Zaira', adminId:'9152243', avClass:'av-choiz',   open:9, closed:81, csat:3.2, resp_h:1.8, close_h:6.2 },
+      { initials:'CA', name:'Caro',  adminId:'9178545', avClass:'av-neutral', open:2, closed:24, csat:3.6, resp_h:3.4, close_h:9.8 },
+    ],
+    vs_week: [
+      { label:'Tickets totales',        curr:175, prev:148, higherIsBad:false },
+      { label:'CSAT promedio',          curr:3.4, prev:3.1, higherIsBad:false, decimal:1 },
+      { label:'Escaladas a humano',     curr:91,  prev:76,  higherIsBad:true  },
+      { label:'Resueltas por IA',       curr:73,  prev:63,  higherIsBad:false },
+      { label:'Reaperturas',            curr:8,   prev:5,   higherIsBad:true  },
+      { label:'Tickets sin respuesta',  curr:3,   prev:2,   higherIsBad:true  },
+    ],
+    times: {
+      first_assign: { choiz: '45 min', label:'Primera asignación (Fin → agente)' },
+      close:        { choiz: '9.2h',   label:'Asignación → cierre (agente)' },
+      first_reply:  { choiz: '1.8h',   label:'Tiempo primera respuesta humana' },
+    },
+    topics: [
+      {label:'Seguimiento pedido',n:28},{label:'Entrega / rastreo',n:19},
+      {label:'Pago / cobro',n:14},{label:'Cancelación envío',n:11},
+      {label:'Formulario médico',n:9},{label:'Suscripción',n:8},
+      {label:'Meses sin intereses',n:6},{label:'Reembolso',n:5},
+      {label:'Rechazo tarjeta',n:4},{label:'Aprobación médica',n:4},
+    ],
+    ia_resolution: [
+      { label:'Assumed resolution', pct:42, color:'#9B6FCA' },
+      { label:'Confirmed resolved', pct:24, color:'#1A6B4A' },
+      { label:'Escalated to human', pct:28, color:'#C0392B' },
+      { label:'Sin resolución IA',  pct:6,  color:'#A497B8' },
+    ],
+    low_csat: [
+      {
+        topic:'Proceso de aprobación médica',
+        issue:'El cliente recibió rechazo en su formulario de minoxidil sin explicación clara ni pasos a seguir.',
+        score:1, remark:null, ws:'choiz', agent:'ZA', days_ago:2, sentiment:'Neutral',
+        accionables:['Agregar mensaje automático explicando el motivo de rechazo','Incluir link directo a cómo completar el formulario correctamente','Revisar si el artículo "Proceso de cobro y aprobación médica" cubre este caso']
+      },
+      {
+        topic:'Seguimiento de pedido',
+        issue:'El cliente preguntó cuándo llega su pedido y no obtuvo una respuesta satisfactoria con fecha concreta.',
+        score:1, remark:null, ws:'choiz', agent:'CA', days_ago:5, sentiment:'Neutral',
+        accionables:['Activar respuesta automática con link de rastreo DHL al momento de la colecta','Fin IA debería poder entregar el número de guía directamente','Evaluar si el artículo "Rastrear tu orden" responde este tipo de consulta']
+      },
+      {
+        topic:'Información de producto',
+        issue:'El cliente tenía dudas sobre los frascos de 30 cápsulas y no encontró la información que buscaba.',
+        score:1, remark:null, ws:'choiz', agent:'CA', days_ago:8, sentiment:'Neutral',
+        accionables:['Actualizar el artículo "Información de los Productos" con detalles de presentaciones','Agregar FAQ específica de dosis y formato de entrega']
+      },
+      {
+        topic:'Gestión de suscripción',
+        issue:'El cliente quiso abrir una nueva aplicación o suscripción y el flujo le resultó confuso.',
+        score:1, remark:null, ws:'choiz', agent:'ZA', days_ago:9, sentiment:'Negative',
+        accionables:['Revisar el flujo de onboarding para segunda suscripción','Crear artículo de ayuda específico para "Cómo empezar un nuevo tratamiento"','Evaluar si Fin IA puede guiar este proceso paso a paso']
+      },
+      {
+        topic:'Confirmación de pago',
+        issue:'El cliente realizó un pago pero no recibió confirmación ni número de guía a tiempo.',
+        score:2, remark:'No recibí confirmación del pago', ws:'choiz', agent:'ZA', days_ago:3, sentiment:'Neutral',
+        accionables:['Automatizar el envío del email de confirmación de pago en menos de 5 min','Agregar estado "Pago recibido" visible en el perfil del cliente','Revisar si hay demoras en el webhook de pagos']
+      },
+      {
+        topic:'Tiempo de entrega',
+        issue:'El pedido tardó más de lo prometido y el cliente no fue notificado de la demora.',
+        score:2, remark:null, ws:'choiz', agent:'ZA', days_ago:6, sentiment:'Negative',
+        accionables:['Configurar alerta proactiva cuando un pedido supera el tiempo estimado','Agregar artículo "¿Qué hacer si mi pedido tarda más de lo esperado?"','Alinear con DHL los SLAs de entrega por zona']
+      },
+      {
+        topic:'Reembolso',
+        issue:'El cliente lleva semanas esperando la devolución de su dinero sin actualizaciones.',
+        score:3, remark:'Llevo 2 semanas esperando', ws:'choiz', agent:'ZA', days_ago:4, sentiment:'Neutral',
+        accionables:['Establecer SLA interno de resolución de reembolsos (máx. 5 días hábiles)','Enviar actualización proactiva cada 48h mientras el reembolso está pendiente','Crear plantilla de respuesta estándar para casos de reembolso en proceso']
+      },
+      {
+        topic:'Entrega internacional',
+        issue:'El envío a destino internacional no llegó y el cliente no recibió solución por parte del agente.',
+        score:1, remark:'No me dieron solución', ws:'timeless', agent:'CA', days_ago:4, sentiment:'Negative',
+        accionables:['Definir protocolo claro para incidencias de envío internacional','Escalar automáticamente a supervisor si el caso no se resuelve en 24h','Contactar activamente al operador logístico y actualizar al cliente']
+      },
+      {
+        topic:'Error de producto',
+        issue:'El cliente recibió un producto incorrecto en su pedido.',
+        score:2, remark:null, ws:'timeless', agent:'CA', days_ago:7, sentiment:'Neutral',
+        accionables:['Crear flujo express para casos de producto equivocado (reenvío prioritario)','Agregar campo de verificación en el picking antes del despacho','Registrar el caso para análisis de error operativo en farmacia']
+      },
+      {
+        topic:'Información médica',
+        issue:'El cliente consideró que la información médica brindada fue incompleta para su consulta.',
+        score:3, remark:null, ws:'timeless', agent:'CA', days_ago:3, sentiment:'Neutral',
+        accionables:['Revisar y ampliar el artículo de Fin IA sobre consultas médicas frecuentes','Capacitar al agente con casos frecuentes de información médica','Evaluar si este tipo de consulta requiere derivación al equipo médico']
+      },
+    ],
+  },
+
+  timeless: {
+    label: 'Timeless',
+    bot: 'Asistente Timeless',
+    ws: 'pm7zkt64',
+    color: 'var(--tless)',
+    accentClass: 'accent-tless',
+    avClass: 'av-tless',
+    wsBadge: '<span class="ws-badge-t">Timeless</span>',
+    kpis: {
+      total:         { v: 27,  prev: 31,  label: 'Total tickets',       higherIsBad: false },
+      abiertas:      { v: 0,   prev: 2,   label: 'Abiertas ahora',      higherIsBad: true  },
+      cerradas:      { v: 27,  prev: 29,  label: 'Cerradas',            higherIsBad: false },
+      fin_confirmed: { v: 8,   prev: 9,   label: 'IA confirmada',       higherIsBad: false },
+      fin_assumed:   { v: 6,   prev: 7,   label: 'IA asumida',          higherIsBad: false },
+      by_agent:      { v: 13,  prev: 15,  label: 'Handoff',             higherIsBad: false },
+    },
+    csat: {
+      avg: 4.1, prev_avg: 3.8,
+      total: 18, positive: 14,
+      scores: { 5: 9, 4: 5, 3: 2, 2: 1, 1: 1 },
+      fin_csat: 4.3,
+      agents_csat: 3.9,
+    },
+    agents: [
+      { initials:'CA', name:'Cande', avClass:'av-tless', open:0, closed:13, csat:3.9, resp_h:2.1, close_h:5.8 },
+    ],
+    vs_week: [
+      { label:'Tickets totales',        curr:27,  prev:31,  higherIsBad:false },
+      { label:'CSAT promedio',          curr:4.1, prev:3.8, higherIsBad:false, decimal:1 },
+      { label:'Escaladas a humano',     curr:13,  prev:15,  higherIsBad:true  },
+      { label:'Resueltas por IA',       curr:14,  prev:16,  higherIsBad:false },
+      { label:'Reaperturas',            curr:1,   prev:3,   higherIsBad:true  },
+      { label:'Tickets sin respuesta',  curr:0,   prev:1,   higherIsBad:true  },
+    ],
+    times: {
+      first_assign: { label:'Primera asignación (Fin → agente)' },
+      close:        { label:'Asignación → cierre (agente)' },
+      first_reply:  { label:'Tiempo primera respuesta humana' },
+    },
+    topics: [
+      {label:'Consulta producto',n:8},{label:'Envío / entrega',n:6},
+      {label:'Devolución',n:4},{label:'Pago',n:4},{label:'Suscripción',n:3},
+      {label:'Información médica',n:2},
+    ],
+    ia_resolution: [
+      { label:'Assumed resolution', pct:52, color:'#9B6FCA' },
+      { label:'Confirmed resolved', pct:30, color:'#1A6B4A' },
+      { label:'Escalated to human', pct:14, color:'#C0392B' },
+      { label:'Sin resolución IA',  pct:4,  color:'#A497B8' },
+    ],
+    low_csat: [
+      { topic:'Demora envío internacional', score:1, remark:'No me dieron solución', ws:'timeless', agent:'CA', days_ago:4, sentiment:'Negative' },
+      { topic:'Producto incorrecto',        score:2, remark:null,                    ws:'timeless', agent:'CA', days_ago:7, sentiment:'Neutral'  },
+      { topic:'Info médica incompleta',     score:3, remark:null,                    ws:'timeless', agent:'CA', days_ago:3, sentiment:'Neutral'  },
+    ],
+  },
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let wsFilter = 'all';
+let period = 'week';
+
+function merged() {
+  // merge choiz + timeless
+  const C = DB.choiz;
+  const T = DB.timeless;
+  return {
+    label: 'Todos',
+    kpis: {
+      total:         { v: C.kpis.total.v + T.kpis.total.v,         prev: C.kpis.total.prev + T.kpis.total.prev,         label:'Total tickets',        higherIsBad:false },
+      abiertas:      { v: C.kpis.abiertas.v + T.kpis.abiertas.v,   prev: C.kpis.abiertas.prev + T.kpis.abiertas.prev,   label:'Abiertas ahora',       higherIsBad:true  },
+      cerradas:      { v: C.kpis.cerradas.v + T.kpis.cerradas.v,   prev: C.kpis.cerradas.prev + T.kpis.cerradas.prev,   label:'Cerradas',             higherIsBad:false },
+      fin_confirmed: { v: C.kpis.fin_confirmed.v + T.kpis.fin_confirmed.v, prev: C.kpis.fin_confirmed.prev + T.kpis.fin_confirmed.prev, label:'IA confirmada', higherIsBad:false },
+      fin_assumed:   { v: C.kpis.fin_assumed.v + T.kpis.fin_assumed.v,     prev: C.kpis.fin_assumed.prev + T.kpis.fin_assumed.prev,     label:'IA asumida',    higherIsBad:false },
+      by_agent:      { v: C.kpis.by_agent.v + T.kpis.by_agent.v,   prev: C.kpis.by_agent.prev + T.kpis.by_agent.prev,   label:'Handoff',              higherIsBad:false },
+    },
+    csat: {
+      avg: +((C.csat.avg + T.csat.avg)/2).toFixed(1),
+      prev_avg: +((C.csat.prev_avg + T.csat.prev_avg)/2).toFixed(1),
+      total: C.csat.total + T.csat.total,
+      positive: C.csat.positive + T.csat.positive,
+      scores: {
+        5: C.csat.scores[5] + T.csat.scores[5],
+        4: C.csat.scores[4] + T.csat.scores[4],
+        3: C.csat.scores[3] + T.csat.scores[3],
+        2: C.csat.scores[2] + T.csat.scores[2],
+        1: C.csat.scores[1] + T.csat.scores[1],
+      },
+      fin_csat: +((C.csat.fin_csat + T.csat.fin_csat)/2).toFixed(1),
+      agents_csat: +((C.csat.agents_csat + T.csat.agents_csat)/2).toFixed(1),
+    },
+    agents: [...C.agents, ...T.agents],
+    vs_week: C.vs_week.map((r,i) => ({
+      label: r.label,
+      curr: r.decimal ? +((r.curr + T.vs_week[i].curr)/2).toFixed(1) : r.curr + T.vs_week[i].curr,
+      prev: r.decimal ? +((r.prev + T.vs_week[i].prev)/2).toFixed(1) : r.prev + T.vs_week[i].prev,
+      higherIsBad: r.higherIsBad,
+      decimal: r.decimal,
+    })),
+    times: C.times,
+    topics: mergeTopics(C.topics, T.topics),
+    ia_resolution: C.ia_resolution.map((r,i) => ({
+      label: r.label,
+      pct: Math.round((r.pct + T.ia_resolution[i].pct)/2),
+      color: r.color,
+    })),
+    low_csat: [...C.low_csat, ...T.low_csat].sort((a,b) => a.score - b.score),
+  };
+}
+
+function mergeTopics(a, b) {
+  const map = {};
+  [...a, ...b].forEach(t => { map[t.label] = (map[t.label] || 0) + t.n; });
+  return Object.entries(map).map(([label,n]) => ({label,n})).sort((a,b) => b.n - a.n);
+}
+
+function data() {
+  if (wsFilter === 'all') return merged();
+  return DB[wsFilter];
+}
+
+// ── RENDERS ───────────────────────────────────────────────────────────────
+function fmtDelta(curr, prev, higherIsBad, decimal) {
+  if (prev === 0) return '';
+  const diff = curr - prev;
+  if (diff === 0) return '<span class="arr-same">—</span>';
+  const pct = Math.abs(Math.round((diff/prev)*100));
+  const isGood = higherIsBad ? diff < 0 : diff > 0;
+  const arrow = diff > 0 ? '↑' : '↓';
+  const cls = isGood ? (diff > 0 ? 'arr-good':'arr-good') : 'arr-bad';
+  return `<span class="${cls}">${arrow} ${pct}%</span>`;
+}
+
+function renderKPIs(d) {
+  const g = document.getElementById('kpi-grid');
+  g.innerHTML = Object.values(d.kpis).map(k => {
+    const delta = k.prev > 0 ? fmtDelta(k.v, k.prev, k.higherIsBad) : '';
+    const cls = k.higherIsBad && k.v > k.prev ? 'danger' : (!k.higherIsBad && k.v >= k.prev ? '' : '');
+    return `<div class="metric-card">
+      <div class="metric-label">${k.label}</div>
+      <div class="metric-value ${cls}">${k.v}</div>
+      <div class="metric-delta">${delta}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderVs(d) {
+  const el = document.getElementById('vs-rows');
+  el.innerHTML = d.vs_week.map(r => {
+    const diff = r.curr - r.prev;
+    let arrowEl = '<span class="arr-same">—</span>';
+    if (diff !== 0) {
+      const isGood = r.higherIsBad ? diff < 0 : diff > 0;
+      arrowEl = `<span class="${isGood ? 'arr-good':'arr-bad'}">${diff > 0 ? '↑':'↓'}</span>`;
+    }
+    const fmt = v => r.decimal ? v.toFixed(1) : v;
+    return `<div class="vs-row">
+      <span class="vs-label">${r.label}</span>
+      <span class="vs-this">${fmt(r.curr)}</span>
+      <span class="vs-arrow">${arrowEl}</span>
+      <span class="vs-prev">${fmt(r.prev)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderTimes(d) {
+  const el = document.getElementById('time-rows');
+  const rows = [
+    { label:'Primera asignación (Fin → agente)', choiz:'45 min', tless:'38 min' },
+    { label:'Asignación → cierre por agente',    choiz:'9.2 h',  tless:'5.8 h'  },
+    { label:'Primera respuesta humana',          choiz:'1.8 h',  tless:'2.1 h'  },
+    { label:'Mediana tiempo de respuesta',       choiz:'44 min', tless:'31 min'  },
+  ];
+  const showC = wsFilter === 'all' || wsFilter === 'choiz';
+  const showT = wsFilter === 'all' || wsFilter === 'timeless';
+
+  const headers = `<thead><tr>
+    <th>Métrica</th>
+    ${showC ? '<th>Choiz</th>' : ''}
+    ${showT ? '<th>Timeless</th>' : ''}
+  </tr></thead>`;
+
+  const body = `<tbody>${rows.map(r => `
+    <tr>
+      <td>${r.label}</td>
+      ${showC ? `<td><span class="time-val tc">${r.choiz}</span></td>` : ''}
+      ${showT ? `<td><span class="time-val tt">${r.tless}</span></td>` : ''}
+    </tr>`).join('')}
+  </tbody>`;
+
+  el.innerHTML = `<table class="time-table">${headers}${body}</table>`;
+}
+
+function renderCSAT(d) {
+  const c = d.csat;
+  const total = Object.values(c.scores).reduce((a,b) => a+b, 0);
+  const avgClass = c.avg >= 4 ? 'csat-good' : c.avg >= 3 ? 'csat-warn' : 'csat-bad';
+  const prevDelta = c.avg - c.prev_avg;
+  const deltaEl = prevDelta === 0 ? '—' : `${prevDelta > 0 ? '↑':'↓'} ${Math.abs(prevDelta).toFixed(1)} vs sem ant.`;
+  const pctPos = total > 0 ? Math.round((c.positive / total)*100) : 0;
+
+  document.getElementById('csat-hero').innerHTML = `
+    <div class="csat-big">
+      <div class="csat-num ${avgClass}">${c.avg.toFixed(1)}</div>
+      <div class="csat-lbl">Promedio general</div>
+      <div style="font-size:11px;margin-top:3px;color:var(--${prevDelta >= 0 ? 'good':'danger'})">${deltaEl}</div>
+    </div>
+    <div class="csat-big">
+      <div class="csat-num ${c.fin_csat >= 4 ? 'csat-good':'csat-warn'}">${c.fin_csat.toFixed(1)}</div>
+      <div class="csat-lbl">CSAT Fin IA</div>
+    </div>
+    <div class="csat-big">
+      <div class="csat-num ${c.agents_csat >= 4 ? 'csat-good':'csat-warn'}">${c.agents_csat.toFixed(1)}</div>
+      <div class="csat-lbl">CSAT agentes</div>
+    </div>
+    <div class="csat-big">
+      <div class="csat-num ${pctPos >= 70 ? 'csat-good':'csat-warn'}">${pctPos}%</div>
+      <div class="csat-lbl">Positivas (4–5★)</div>
+    </div>`;
+
+  const fillCls = { 5:'fill-5', 4:'fill-4', 3:'fill-3', 2:'fill-2', 1:'fill-1' };
+  const max = Math.max(...Object.values(c.scores));
+  document.getElementById('csat-stars').innerHTML = [5,4,3,2,1].map(s => {
+    const n = c.scores[s] || 0;
+    const pct = max > 0 ? Math.round((n/max)*100) : 0;
+    return `<div class="star-row">
+      <span class="star-label">${s}★</span>
+      <div class="star-track"><div class="star-fill ${fillCls[s]}" style="width:${pct}%"></div></div>
+      <span class="star-count">${n}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderAgentCSAT(d) {
+  document.getElementById('agent-csat').innerHTML = d.agents.map(a => {
+    const cls = a.csat >= 4 ? 'csat-good' : a.csat >= 3 ? 'csat-warn' : 'csat-bad';
+    const bar = Math.round((a.csat / 5)*100);
+    return `<div class="agent-row">
+      <div class="agent-avatar ${a.avClass}">${a.initials}</div>
+      <div class="agent-info">
+        <div class="agent-name">${a.name}</div>
+        <div style="height:5px;background:var(--bg);border-radius:3px;margin-top:4px;overflow:hidden">
+          <div style="height:100%;width:${bar}%;background:${a.csat >= 4 ? 'var(--good)' : a.csat >= 3 ? '#EF9F27' : 'var(--danger)'};border-radius:3px"></div>
+        </div>
+      </div>
+      <div class="agent-stats">
+        <div class="agent-stat">
+          <div class="agent-stat-val ${cls}">${a.csat.toFixed(1)}</div>
+          <div class="agent-stat-lbl">CSAT</div>
+        </div>
+        <div class="agent-stat">
+          <div class="agent-stat-val">${a.closed}</div>
+          <div class="agent-stat-lbl">cerradas</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderIA(d) {
+  const el = document.getElementById('ia-resolution');
+  const total = d.kpis.total.v;
+  el.innerHTML = d.ia_resolution.map(r => {
+    return `<div class="ia-row">
+      <span class="ia-label">${r.label}</span>
+      <div class="ia-bar-wrap"><div class="ia-bar" style="width:${r.pct}%;background:${r.color}"></div></div>
+      <span class="ia-pct">${r.pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function renderLowCSAT(d) {
+  const el = document.getElementById('low-csat-list');
+  const items = d.low_csat.filter(i => i.score < 4);
+  if (!items.length) { el.innerHTML = '<div class="empty">Sin valoraciones bajas en este período ✓</div>'; return; }
+  el.innerHTML = items.map(item => {
+    const wsBadge = item.ws === 'choiz' ? DB.choiz.wsBadge : DB.timeless.wsBadge;
+    const remarkEl = item.remark ? `<div class="low-remark">"${item.remark}"</div>` : '';
+    const sentColor = item.sentiment === 'Negative' ? 'var(--danger)' : 'var(--subtle)';
+    const accionablesEl = item.accionables && item.accionables.length
+      ? `<div class="accionables-label">Accionables sugeridos</div>
+         <ul class="accionable-list">${item.accionables.map(a => `<li>${a}</li>`).join('')}</ul>`
+      : '';
+    return `<div class="low-csat-item score-${item.score}">
+      <div class="low-item-top">
+        <span class="low-topic">${item.topic}</span>
+        <span class="low-badges">
+          ${wsBadge}
+          <span class="score-badge sb-${item.score}">${item.score}★</span>
+        </span>
+      </div>
+      <div class="low-issue">${item.issue}</div>
+      ${remarkEl}
+      <div class="low-meta">
+        <span>Agente: ${item.agent}</span>
+        <span>Hace ${item.days_ago} día${item.days_ago !== 1 ? 's':''}</span>
+        <span style="color:${sentColor}">Sentimiento: ${item.sentiment}</span>
+      </div>
+      ${accionablesEl}
+    </div>`;
+  }).join('');
+}
+
+function renderTopics(d) {
+  const el = document.getElementById('topics');
+  el.innerHTML = d.topics.map(t =>
+    `<div class="topic-chip">${t.label}<span class="chip-n">${t.n}</span></div>`
+  ).join('');
+}
+
+function renderAgentsDetail(d) {
+  const el = document.getElementById('agents-detail');
+  el.innerHTML = d.agents.map(a => `
+    <div class="agent-row">
+      <div class="agent-avatar ${a.avClass}">${a.initials}</div>
+      <div class="agent-info">
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-ws">T. respuesta: ${a.resp_h}h · T. cierre: ${a.close_h}h</div>
+      </div>
+      <div class="agent-stats">
+        <div class="agent-stat">
+          <div class="agent-stat-val" style="color:${a.open > 0 ? 'var(--warn)':'var(--good)'}">${a.open}</div>
+          <div class="agent-stat-lbl">abiertas</div>
+        </div>
+        <div class="agent-stat">
+          <div class="agent-stat-val">${a.closed}</div>
+          <div class="agent-stat-lbl">cerradas</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderBanner(d) {
+  const periods = { day:'Hoy, 9 Abril 2026', week:'Semana: 1 – 9 Abril 2026', month:'Mes: Abril 2026' };
+  document.getElementById('banner-title').textContent = periods[period];
+  const pillC = document.getElementById('pill-choiz');
+  const pillT = document.getElementById('pill-tless');
+  if (wsFilter === 'timeless') { pillC.classList.add('hidden'); pillT.classList.remove('hidden'); }
+  else if (wsFilter === 'choiz') { pillT.classList.add('hidden'); pillC.classList.remove('hidden'); }
+  else { pillC.classList.remove('hidden'); pillT.classList.remove('hidden'); }
+  pillC.textContent = `Choiz · ${DB.choiz.kpis.total.v} tickets`;
+  pillT.textContent = `Timeless · ${DB.timeless.kpis.total.v} tickets`;
+}
+
+function render() {
+  const d = data();
+  renderBanner(d);
+  renderKPIs(d);
+  renderVs(d);
+  renderTimes(d);
+  renderCSAT(d);
+  renderAgentCSAT(d);
+  renderIA(d);
+  renderLowCSAT(d);
+  renderTopics(d);
+  renderAgentsDetail(d);
+}
+
+// ── CONTROLS ──────────────────────────────────────────────────────────────
+function setWS(ws, btn) {
+  wsFilter = ws;
+  document.querySelectorAll('.ws-btn').forEach(b => {
+    b.className = 'ws-btn';
+  });
+  if (ws === 'choiz') btn.className = 'ws-btn active-choiz';
+  else if (ws === 'timeless') btn.className = 'ws-btn active-tless';
+  else btn.className = 'ws-btn active-all';
+  render();
+}
+
+function setPeriod(p, btn) {
+  period = p;
+  customDateActive = false;
+  document.getElementById('date-clear-btn').style.display = 'none';
+  document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const hints = { day:'Hoy, 9 Abril 2026', week:'1 – 9 Abril 2026', month:'Abril 2026' };
+  document.getElementById('period-hint').textContent = hints[p];
+  renderBanner(data());
+}
+
+function doRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  const icon = document.getElementById('spin-icon');
+  btn.classList.add('loading');
+  icon.classList.add('spinning');
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    icon.classList.remove('spinning');
+    setTimestamp();
+  }, 1200);
+}
+
+function setTimestamp() {
+  const now = new Date();
+  const fmt = now.toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
+  document.getElementById('ts').textContent = `Actualizado ${fmt}`;
+  document.getElementById('footer-time').textContent = now.toLocaleString('es-MX');
+}
+
+// ── CUSTOM DATE RANGE ─────────────────────────────────────────────────────
+let customDateActive = false;
+
+function applyCustomDate() {
+  const from = document.getElementById('date-from').value;
+  const to   = document.getElementById('date-to').value;
+  if (!from || !to) return;
+  if (from > to) {
+    document.getElementById('date-from').style.borderColor = 'var(--danger)';
+    return;
+  }
+  document.getElementById('date-from').style.borderColor = '';
+  customDateActive = true;
+
+  // Deactivate period buttons visually
+  document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+
+  // Format display label
+  const fmt = d => {
+    const [y,m,day] = d.split('-');
+    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+  };
+  const label = from === to ? fmt(from) : `${fmt(from)} – ${fmt(to)}`;
+  document.getElementById('period-hint').textContent = label;
+  document.getElementById('banner-title').textContent = label;
+  document.getElementById('date-clear-btn').style.display = '';
+  render();
+}
+
+function clearCustomDate() {
+  customDateActive = false;
+  document.getElementById('date-clear-btn').style.display = 'none';
+  // Restore week as default
+  const weekBtn = document.querySelector('.btn-group button:nth-child(2)');
+  setPeriod('week', weekBtn);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+render();
+setTimestamp();
+</script>
+</body>
+</html>
