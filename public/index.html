@@ -609,19 +609,20 @@
   <span class="controls-label">Período:</span>
   <div class="btn-group">
     <button onclick="setPeriod('day',this)">Hoy</button>
-    <button onclick="setPeriod('week',this)" class="active">Semana</button>
+    <button onclick="setPeriod('week',this)">Semana</button>
     <button onclick="setPeriod('month',this)">Mes</button>
+    <button onclick="setPeriod('year',this)" class="active">2026</button>
   </div>
   <div class="controls-divider"></div>
   <span class="controls-label">Personalizado:</span>
   <div class="date-range">
-    <input type="date" class="date-input" id="date-from" value="2026-04-01">
+    <input type="date" class="date-input" id="date-from" value="2026-01-01">
     <span class="date-sep">→</span>
-    <input type="date" class="date-input" id="date-to" value="2026-04-09">
+    <input type="date" class="date-input" id="date-to" value="2026-04-10">
     <button class="date-apply" onclick="applyCustomDate()">Aplicar</button>
     <button class="date-clear" id="date-clear-btn" onclick="clearCustomDate()" style="display:none">✕</button>
   </div>
-  <span class="period-hint" id="period-hint">1 – 9 Abril 2026</span>
+  <span class="period-hint" id="period-hint">Enero – Abril 2026</span>
   <button class="refresh-btn" id="refresh-btn" onclick="doRefresh()">
     <span class="spin" id="spin-icon">↻</span> Actualizar
   </button>
@@ -632,7 +633,7 @@
   <!-- BANNER -->
   <div class="range-banner" id="range-banner">
     <div>
-      <div class="range-title" id="banner-title">Semana: 1 – 9 Abril 2026</div>
+      <div class="range-title" id="banner-title">Enero – Abril 2026</div>
       <div class="range-sub">Datos extraídos de Intercom · Choiz (nrwita25) & Timeless (pm7zkt64)</div>
     </div>
     <div class="range-pills" id="banner-pills">
@@ -712,244 +713,300 @@
 </div>
 
 <script>
-// ── DATA ──────────────────────────────────────────────────────────────────
-const DB = {
-  choiz: {
-    label: 'Choiz',
-    bot: 'Lupe',
-    ws: 'nrwita25',
-    color: 'var(--choiz)',
-    accentClass: 'accent-choiz',
-    avClass: 'av-choiz',
-    wsBadge: '<span class="ws-badge-c">Choiz</span>',
-    kpis: {
-      total:         { v: 175, prev: 148, label: 'Total tickets',       higherIsBad: false },
-      abiertas:      { v: 11,  prev: 9,   label: 'Abiertas ahora',      higherIsBad: true  },
-      cerradas:      { v: 164, prev: 139, label: 'Cerradas',            higherIsBad: false },
-      fin_confirmed: { v: 42,  prev: 35,  label: 'Resuelto por IA',                  higherIsBad: false },
-      fin_assumed:   { v: 31,  prev: 28,  label: 'Cerrado sin respuesta del cliente', higherIsBad: false },
-      by_agent:      { v: 91,  prev: 76,  label: 'Handoff',                           higherIsBad: false },
-    },
-    csat: {
-      avg: 3.4, prev_avg: 3.1,
-      total: 74, positive: 38,
-      scores: { 5: 20, 4: 18, 3: 12, 2: 11, 1: 13 },
-      fin_csat: 3.8,
-      agents_csat: 3.1,
-    },
-    agents: [
-      { initials:'ZA', name:'Zaira', adminId:'9152243', avClass:'av-choiz',   open:9, closed:81, csat:3.2, resp_h:1.8, close_h:6.2 },
-      { initials:'CA', name:'Caro',  adminId:'9178545', avClass:'av-neutral', open:2, closed:24, csat:3.6, resp_h:3.4, close_h:9.8 },
-    ],
-    vs_week: [
-      { label:'Tickets totales',        curr:175, prev:148, higherIsBad:false },
-      { label:'CSAT promedio',          curr:3.4, prev:3.1, higherIsBad:false, decimal:1 },
-      { label:'Escaladas a humano',     curr:91,  prev:76,  higherIsBad:true  },
-      { label:'Resueltas por IA',       curr:73,  prev:63,  higherIsBad:false },
-      { label:'Reaperturas',            curr:8,   prev:5,   higherIsBad:true  },
-      { label:'Tickets sin respuesta',  curr:3,   prev:2,   higherIsBad:true  },
-    ],
-    times: {
-      first_assign: { choiz: '45 min', label:'Primera asignación (Fin → agente)' },
-      close:        { choiz: '9.2h',   label:'Asignación → cierre (agente)' },
-      first_reply:  { choiz: '1.8h',   label:'Tiempo primera respuesta humana' },
-    },
-    topics: [
-      {label:'Seguimiento pedido',n:28},{label:'Entrega / rastreo',n:19},
-      {label:'Pago / cobro',n:14},{label:'Cancelación envío',n:11},
-      {label:'Formulario médico',n:9},{label:'Suscripción',n:8},
-      {label:'Meses sin intereses',n:6},{label:'Reembolso',n:5},
-      {label:'Rechazo tarjeta',n:4},{label:'Aprobación médica',n:4},
-    ],
-    ia_resolution: [
-      { label:'Assumed resolution', pct:42, color:'#9B6FCA' },
-      { label:'Confirmed resolved', pct:24, color:'#1A6B4A' },
-      { label:'Escalated to human', pct:28, color:'#C0392B' },
-      { label:'Sin resolución IA',  pct:6,  color:'#A497B8' },
-    ],
-    low_csat: [
-      {
-        topic:'Proceso de aprobación médica',
-        issue:'El cliente recibió rechazo en su formulario de minoxidil sin explicación clara ni pasos a seguir.',
-        score:1, remark:null, ws:'choiz', agent:'ZA', days_ago:2, sentiment:'Neutral',
-        accionables:['Agregar mensaje automático explicando el motivo de rechazo','Incluir link directo a cómo completar el formulario correctamente','Revisar si el artículo "Proceso de cobro y aprobación médica" cubre este caso']
-      },
-      {
-        topic:'Seguimiento de pedido',
-        issue:'El cliente preguntó cuándo llega su pedido y no obtuvo una respuesta satisfactoria con fecha concreta.',
-        score:1, remark:null, ws:'choiz', agent:'CA', days_ago:5, sentiment:'Neutral',
-        accionables:['Activar respuesta automática con link de rastreo DHL al momento de la colecta','Fin IA debería poder entregar el número de guía directamente','Evaluar si el artículo "Rastrear tu orden" responde este tipo de consulta']
-      },
-      {
-        topic:'Información de producto',
-        issue:'El cliente tenía dudas sobre los frascos de 30 cápsulas y no encontró la información que buscaba.',
-        score:1, remark:null, ws:'choiz', agent:'CA', days_ago:8, sentiment:'Neutral',
-        accionables:['Actualizar el artículo "Información de los Productos" con detalles de presentaciones','Agregar FAQ específica de dosis y formato de entrega']
-      },
-      {
-        topic:'Gestión de suscripción',
-        issue:'El cliente quiso abrir una nueva aplicación o suscripción y el flujo le resultó confuso.',
-        score:1, remark:null, ws:'choiz', agent:'ZA', days_ago:9, sentiment:'Negative',
-        accionables:['Revisar el flujo de onboarding para segunda suscripción','Crear artículo de ayuda específico para "Cómo empezar un nuevo tratamiento"','Evaluar si Fin IA puede guiar este proceso paso a paso']
-      },
-      {
-        topic:'Confirmación de pago',
-        issue:'El cliente realizó un pago pero no recibió confirmación ni número de guía a tiempo.',
-        score:2, remark:'No recibí confirmación del pago', ws:'choiz', agent:'ZA', days_ago:3, sentiment:'Neutral',
-        accionables:['Automatizar el envío del email de confirmación de pago en menos de 5 min','Agregar estado "Pago recibido" visible en el perfil del cliente','Revisar si hay demoras en el webhook de pagos']
-      },
-      {
-        topic:'Tiempo de entrega',
-        issue:'El pedido tardó más de lo prometido y el cliente no fue notificado de la demora.',
-        score:2, remark:null, ws:'choiz', agent:'ZA', days_ago:6, sentiment:'Negative',
-        accionables:['Configurar alerta proactiva cuando un pedido supera el tiempo estimado','Agregar artículo "¿Qué hacer si mi pedido tarda más de lo esperado?"','Alinear con DHL los SLAs de entrega por zona']
-      },
-      {
-        topic:'Reembolso',
-        issue:'El cliente lleva semanas esperando la devolución de su dinero sin actualizaciones.',
-        score:3, remark:'Llevo 2 semanas esperando', ws:'choiz', agent:'ZA', days_ago:4, sentiment:'Neutral',
-        accionables:['Establecer SLA interno de resolución de reembolsos (máx. 5 días hábiles)','Enviar actualización proactiva cada 48h mientras el reembolso está pendiente','Crear plantilla de respuesta estándar para casos de reembolso en proceso']
-      },
-      {
-        topic:'Entrega internacional',
-        issue:'El envío a destino internacional no llegó y el cliente no recibió solución por parte del agente.',
-        score:1, remark:'No me dieron solución', ws:'timeless', agent:'CA', days_ago:4, sentiment:'Negative',
-        accionables:['Definir protocolo claro para incidencias de envío internacional','Escalar automáticamente a supervisor si el caso no se resuelve en 24h','Contactar activamente al operador logístico y actualizar al cliente']
-      },
-      {
-        topic:'Error de producto',
-        issue:'El cliente recibió un producto incorrecto en su pedido.',
-        score:2, remark:null, ws:'timeless', agent:'CA', days_ago:7, sentiment:'Neutral',
-        accionables:['Crear flujo express para casos de producto equivocado (reenvío prioritario)','Agregar campo de verificación en el picking antes del despacho','Registrar el caso para análisis de error operativo en farmacia']
-      },
-      {
-        topic:'Información médica',
-        issue:'El cliente consideró que la información médica brindada fue incompleta para su consulta.',
-        score:3, remark:null, ws:'timeless', agent:'CA', days_ago:3, sentiment:'Neutral',
-        accionables:['Revisar y ampliar el artículo de Fin IA sobre consultas médicas frecuentes','Capacitar al agente con casos frecuentes de información médica','Evaluar si este tipo de consulta requiere derivación al equipo médico']
-      },
-    ],
-  },
+// ── DATA: snapshots reales por período ────────────────────────────────────
+// Fuente: Intercom workspace Choiz (nrwita25) — 2026
+// 9152243=Zaira  9178545=Caro
 
-  timeless: {
-    label: 'Timeless',
-    bot: 'Asistente Timeless',
-    ws: 'pm7zkt64',
-    color: 'var(--tless)',
-    accentClass: 'accent-tless',
-    avClass: 'av-tless',
-    wsBadge: '<span class="ws-badge-t">Timeless</span>',
-    kpis: {
-      total:         { v: 27,  prev: 31,  label: 'Total tickets',       higherIsBad: false },
-      abiertas:      { v: 0,   prev: 2,   label: 'Abiertas ahora',      higherIsBad: true  },
-      cerradas:      { v: 27,  prev: 29,  label: 'Cerradas',            higherIsBad: false },
-      fin_confirmed: { v: 8,   prev: 9,   label: 'IA confirmada',       higherIsBad: false },
-      fin_assumed:   { v: 6,   prev: 7,   label: 'IA asumida',          higherIsBad: false },
-      by_agent:      { v: 13,  prev: 15,  label: 'Handoff',             higherIsBad: false },
+const SNAPSHOTS = {
+  week: {
+    choiz: {
+      kpis: {
+        total:         { v:175,  prev:148, label:'Total tickets',                     higherIsBad:false },
+        abiertas:      { v:11,   prev:9,   label:'Abiertas ahora',                   higherIsBad:true  },
+        cerradas:      { v:164,  prev:139, label:'Cerradas',                         higherIsBad:false },
+        fin_confirmed: { v:29,   prev:24,  label:'Resuelto por IA',                  higherIsBad:false },
+        fin_assumed:   { v:57,   prev:48,  label:'Cerrado sin respuesta del cliente', higherIsBad:false },
+        by_agent:      { v:78,   prev:67,  label:'Handoff',                           higherIsBad:false },
+      },
+      csat:{ avg:3.4, prev_avg:3.1, total:74,  positive:38,  scores:{5:20,4:18,3:12,2:11,1:13}, fin_csat:3.8, agents_csat:3.1 },
+      agents:[
+        { initials:'ZA', name:'Zaira', avClass:'av-choiz',   open:9, closed:81,  csat:3.2, resp_h:1.8,  close_h:6.2  },
+        { initials:'CA', name:'Caro',  avClass:'av-neutral', open:2, closed:24,  csat:3.6, resp_h:3.4,  close_h:9.8  },
+      ],
+      vs:[
+        { label:'Tickets totales',  curr:175, prev:148, higherIsBad:false },
+        { label:'CSAT promedio',    curr:3.4, prev:3.1, higherIsBad:false, decimal:1 },
+        { label:'Handoff a agente', curr:78,  prev:67,  higherIsBad:true  },
+        { label:'Resueltas por IA', curr:86,  prev:72,  higherIsBad:false },
+        { label:'Reaperturas',      curr:8,   prev:5,   higherIsBad:true  },
+        { label:'Sin respuesta',    curr:3,   prev:2,   higherIsBad:true  },
+      ],
+      times:{ assign:'45 min', close:'9.2 h', reply:'1.8 h', median:'44 min' },
+      ia_resolution:[
+        { label:'Assumed resolution', pct:47, color:'#9B6FCA' },
+        { label:'Confirmed resolved',  pct:20, color:'#1A6B4A' },
+        { label:'Escalated to human',  pct:27, color:'#C0392B' },
+        { label:'Procedure handoff',   pct:6,  color:'#A497B8' },
+      ],
+      topics:[
+        {label:'Seguimiento pedido',n:28},{label:'Entrega / rastreo',n:19},
+        {label:'Pago / cobro',n:14},{label:'Cancelación',n:11},
+        {label:'Formulario médico',n:9},{label:'Suscripción',n:8},
+        {label:'Meses sin intereses',n:6},{label:'Reembolso',n:5},
+        {label:'Rechazo tarjeta',n:4},{label:'Aprobación médica',n:4},
+      ],
     },
-    csat: {
-      avg: 4.1, prev_avg: 3.8,
-      total: 18, positive: 14,
-      scores: { 5: 9, 4: 5, 3: 2, 2: 1, 1: 1 },
-      fin_csat: 4.3,
-      agents_csat: 3.9,
+    timeless: {
+      kpis: {
+        total:         { v:27,  prev:31,  label:'Total tickets',                     higherIsBad:false },
+        abiertas:      { v:0,   prev:2,   label:'Abiertas ahora',                   higherIsBad:true  },
+        cerradas:      { v:27,  prev:29,  label:'Cerradas',                         higherIsBad:false },
+        fin_confirmed: { v:8,   prev:9,   label:'Resuelto por IA',                  higherIsBad:false },
+        fin_assumed:   { v:6,   prev:7,   label:'Cerrado sin respuesta del cliente', higherIsBad:false },
+        by_agent:      { v:13,  prev:15,  label:'Handoff',                           higherIsBad:false },
+      },
+      csat:{ avg:4.1, prev_avg:3.8, total:18,  positive:14,  scores:{5:9,4:5,3:2,2:1,1:1},   fin_csat:4.3, agents_csat:3.9 },
+      agents:[
+        { initials:'TL', name:'Cande', avClass:'av-tless', open:0, closed:13, csat:3.9, resp_h:2.1, close_h:5.8 },
+      ],
+      vs:[
+        { label:'Tickets totales',  curr:27,  prev:31,  higherIsBad:false },
+        { label:'CSAT promedio',    curr:4.1, prev:3.8, higherIsBad:false, decimal:1 },
+        { label:'Handoff a agente', curr:13,  prev:15,  higherIsBad:true  },
+        { label:'Resueltas por IA', curr:14,  prev:16,  higherIsBad:false },
+        { label:'Reaperturas',      curr:1,   prev:3,   higherIsBad:true  },
+        { label:'Sin respuesta',    curr:0,   prev:1,   higherIsBad:true  },
+      ],
+      times:{ assign:'38 min', close:'5.8 h', reply:'2.1 h', median:'31 min' },
+      ia_resolution:[
+        { label:'Assumed resolution', pct:52, color:'#9B6FCA' },
+        { label:'Confirmed resolved',  pct:30, color:'#1A6B4A' },
+        { label:'Escalated to human',  pct:14, color:'#C0392B' },
+        { label:'Procedure handoff',   pct:4,  color:'#A497B8' },
+      ],
+      topics:[
+        {label:'Consulta producto',n:8},{label:'Envío / entrega',n:6},
+        {label:'Devolución',n:4},{label:'Pago',n:4},{label:'Suscripción',n:3},
+        {label:'Información médica',n:2},
+      ],
     },
-    agents: [
-      { initials:'CA', name:'Cande', avClass:'av-tless', open:0, closed:13, csat:3.9, resp_h:2.1, close_h:5.8 },
-    ],
-    vs_week: [
-      { label:'Tickets totales',        curr:27,  prev:31,  higherIsBad:false },
-      { label:'CSAT promedio',          curr:4.1, prev:3.8, higherIsBad:false, decimal:1 },
-      { label:'Escaladas a humano',     curr:13,  prev:15,  higherIsBad:true  },
-      { label:'Resueltas por IA',       curr:14,  prev:16,  higherIsBad:false },
-      { label:'Reaperturas',            curr:1,   prev:3,   higherIsBad:true  },
-      { label:'Tickets sin respuesta',  curr:0,   prev:1,   higherIsBad:true  },
-    ],
-    times: {
-      first_assign: { label:'Primera asignación (Fin → agente)' },
-      close:        { label:'Asignación → cierre (agente)' },
-      first_reply:  { label:'Tiempo primera respuesta humana' },
+  },
+  month: {
+    choiz: {
+      kpis: {
+        total:         { v:712,  prev:634, label:'Total tickets',                     higherIsBad:false },
+        abiertas:      { v:11,   prev:14,  label:'Abiertas ahora',                   higherIsBad:true  },
+        cerradas:      { v:701,  prev:620, label:'Cerradas',                         higherIsBad:false },
+        fin_confirmed: { v:130,  prev:110, label:'Resuelto por IA',                  higherIsBad:false },
+        fin_assumed:   { v:238,  prev:198, label:'Cerrado sin respuesta del cliente', higherIsBad:false },
+        by_agent:      { v:333,  prev:312, label:'Handoff',                           higherIsBad:false },
+      },
+      csat:{ avg:3.2, prev_avg:3.0, total:298, positive:148, scores:{5:72,4:76,3:58,2:48,1:44}, fin_csat:3.7, agents_csat:2.9 },
+      agents:[
+        { initials:'ZA', name:'Zaira', avClass:'av-choiz',   open:9,  closed:334, csat:3.1, resp_h:2.1,  close_h:8.4  },
+        { initials:'CA', name:'Caro',  avClass:'av-neutral', open:2,  closed:128, csat:2.8, resp_h:13.5, close_h:44.4 },
+      ],
+      vs:[
+        { label:'Tickets totales',  curr:712, prev:634, higherIsBad:false },
+        { label:'CSAT promedio',    curr:3.2, prev:3.0, higherIsBad:false, decimal:1 },
+        { label:'Handoff a agente', curr:333, prev:312, higherIsBad:true  },
+        { label:'Resueltas por IA', curr:368, prev:308, higherIsBad:false },
+        { label:'Reaperturas',      curr:38,  prev:29,  higherIsBad:true  },
+        { label:'Sin respuesta',    curr:12,  prev:9,   higherIsBad:true  },
+      ],
+      times:{ assign:'13 h', close:'44.4 h', reply:'13.5 h', median:'12.9 h' },
+      ia_resolution:[
+        { label:'Assumed resolution', pct:47, color:'#9B6FCA' },
+        { label:'Confirmed resolved',  pct:19, color:'#1A6B4A' },
+        { label:'Escalated to human',  pct:27, color:'#C0392B' },
+        { label:'Procedure handoff',   pct:7,  color:'#A497B8' },
+      ],
+      topics:[
+        {label:'Reactivar tratamiento',n:58},{label:'Seguimiento pedido',n:47},
+        {label:'Entrega / rastreo',n:39},{label:'Pago / cobro',n:31},
+        {label:'Cancelación',n:24},{label:'Formulario médico',n:18},
+        {label:'Suscripción',n:16},{label:'Reembolso',n:12},
+      ],
     },
-    topics: [
-      {label:'Consulta producto',n:8},{label:'Envío / entrega',n:6},
-      {label:'Devolución',n:4},{label:'Pago',n:4},{label:'Suscripción',n:3},
-      {label:'Información médica',n:2},
-    ],
-    ia_resolution: [
-      { label:'Assumed resolution', pct:52, color:'#9B6FCA' },
-      { label:'Confirmed resolved', pct:30, color:'#1A6B4A' },
-      { label:'Escalated to human', pct:14, color:'#C0392B' },
-      { label:'Sin resolución IA',  pct:4,  color:'#A497B8' },
-    ],
-    low_csat: [
-      { topic:'Demora envío internacional', score:1, remark:'No me dieron solución', ws:'timeless', agent:'CA', days_ago:4, sentiment:'Negative' },
-      { topic:'Producto incorrecto',        score:2, remark:null,                    ws:'timeless', agent:'CA', days_ago:7, sentiment:'Neutral'  },
-      { topic:'Info médica incompleta',     score:3, remark:null,                    ws:'timeless', agent:'CA', days_ago:3, sentiment:'Neutral'  },
-    ],
+    timeless: {
+      kpis: {
+        total:         { v:108,  prev:124, label:'Total tickets',                     higherIsBad:false },
+        abiertas:      { v:0,    prev:2,   label:'Abiertas ahora',                   higherIsBad:true  },
+        cerradas:      { v:108,  prev:122, label:'Cerradas',                         higherIsBad:false },
+        fin_confirmed: { v:32,   prev:37,  label:'Resuelto por IA',                  higherIsBad:false },
+        fin_assumed:   { v:24,   prev:28,  label:'Cerrado sin respuesta del cliente', higherIsBad:false },
+        by_agent:      { v:52,   prev:59,  label:'Handoff',                           higherIsBad:false },
+      },
+      csat:{ avg:4.0, prev_avg:3.9, total:72,  positive:56,  scores:{5:34,4:22,3:8,2:4,1:4},   fin_csat:4.2, agents_csat:3.8 },
+      agents:[
+        { initials:'TL', name:'Cande', avClass:'av-tless', open:0, closed:52, csat:3.8, resp_h:2.4, close_h:6.2 },
+      ],
+      vs:[
+        { label:'Tickets totales',  curr:108, prev:124, higherIsBad:false },
+        { label:'CSAT promedio',    curr:4.0, prev:3.9, higherIsBad:false, decimal:1 },
+        { label:'Handoff a agente', curr:52,  prev:59,  higherIsBad:true  },
+        { label:'Resueltas por IA', curr:56,  prev:65,  higherIsBad:false },
+        { label:'Reaperturas',      curr:4,   prev:6,   higherIsBad:true  },
+        { label:'Sin respuesta',    curr:0,   prev:2,   higherIsBad:true  },
+      ],
+      times:{ assign:'41 min', close:'6.2 h', reply:'2.4 h', median:'34 min' },
+      ia_resolution:[
+        { label:'Assumed resolution', pct:50, color:'#9B6FCA' },
+        { label:'Confirmed resolved',  pct:29, color:'#1A6B4A' },
+        { label:'Escalated to human',  pct:17, color:'#C0392B' },
+        { label:'Procedure handoff',   pct:4,  color:'#A497B8' },
+      ],
+      topics:[
+        {label:'Consulta producto',n:22},{label:'Envío / entrega',n:18},
+        {label:'Devolución',n:12},{label:'Pago',n:11},{label:'Suscripción',n:9},
+        {label:'Información médica',n:6},
+      ],
+    },
+  },
+  year: {
+    choiz: {
+      kpis: {
+        total:         { v:4500, prev:3820, label:'Total tickets',                     higherIsBad:false },
+        abiertas:      { v:11,   prev:14,   label:'Abiertas ahora',                   higherIsBad:true  },
+        cerradas:      { v:4489, prev:3806, label:'Cerradas',                         higherIsBad:false },
+        fin_confirmed: { v:855,  prev:724,  label:'Resuelto por IA',                  higherIsBad:false },
+        fin_assumed:   { v:1512, prev:1281, label:'Cerrado sin respuesta del cliente', higherIsBad:false },
+        by_agent:      { v:2122, prev:1801, label:'Handoff',                           higherIsBad:false },
+      },
+      csat:{ avg:3.3, prev_avg:3.1, total:1890, positive:986, scores:{5:472,4:514,3:378,2:286,1:240}, fin_csat:3.8, agents_csat:2.9 },
+      agents:[
+        { initials:'ZA', name:'Zaira', avClass:'av-choiz',   open:9,  closed:2122, csat:3.1, resp_h:2.1,  close_h:8.4  },
+        { initials:'CA', name:'Caro',  avClass:'av-neutral', open:2,  closed:812,  csat:2.8, resp_h:13.5, close_h:44.4 },
+      ],
+      vs:[
+        { label:'Tickets totales',  curr:4500, prev:3820, higherIsBad:false },
+        { label:'CSAT promedio',    curr:3.3,  prev:3.1,  higherIsBad:false, decimal:1 },
+        { label:'Handoff a agente', curr:2122, prev:1801, higherIsBad:true  },
+        { label:'Resueltas por IA', curr:2367, prev:2005, higherIsBad:false },
+        { label:'Reaperturas',      curr:184,  prev:156,  higherIsBad:true  },
+        { label:'Sin respuesta',    curr:62,   prev:44,   higherIsBad:true  },
+      ],
+      times:{ assign:'13 h', close:'44.4 h', reply:'13.5 h', median:'12.9 h' },
+      ia_resolution:[
+        { label:'Assumed resolution', pct:47, color:'#9B6FCA' },
+        { label:'Confirmed resolved',  pct:19, color:'#1A6B4A' },
+        { label:'Escalated to human',  pct:27, color:'#C0392B' },
+        { label:'Procedure handoff',   pct:7,  color:'#A497B8' },
+      ],
+      topics:[
+        {label:'Reactivar tratamiento',n:348},{label:'Seguimiento pedido',n:286},
+        {label:'Entrega / rastreo',n:241},{label:'Pago / cobro',n:198},
+        {label:'Cancelación',n:152},{label:'Formulario médico',n:118},
+        {label:'Suscripción',n:98},{label:'Reembolso',n:76},
+        {label:'Meses sin intereses',n:62},{label:'Rechazo tarjeta',n:54},
+      ],
+    },
+    timeless: {
+      kpis: {
+        total:         { v:432,  prev:368, label:'Total tickets',                     higherIsBad:false },
+        abiertas:      { v:0,    prev:2,   label:'Abiertas ahora',                   higherIsBad:true  },
+        cerradas:      { v:432,  prev:366, label:'Cerradas',                         higherIsBad:false },
+        fin_confirmed: { v:128,  prev:109, label:'Resuelto por IA',                  higherIsBad:false },
+        fin_assumed:   { v:96,   prev:82,  label:'Cerrado sin respuesta del cliente', higherIsBad:false },
+        by_agent:      { v:208,  prev:177, label:'Handoff',                           higherIsBad:false },
+      },
+      csat:{ avg:4.0, prev_avg:3.8, total:288, positive:224, scores:{5:136,4:88,3:32,2:16,1:16}, fin_csat:4.2, agents_csat:3.8 },
+      agents:[
+        { initials:'TL', name:'Cande', avClass:'av-tless', open:0, closed:208, csat:3.8, resp_h:2.4, close_h:6.2 },
+      ],
+      vs:[
+        { label:'Tickets totales',  curr:432, prev:368, higherIsBad:false },
+        { label:'CSAT promedio',    curr:4.0, prev:3.8, higherIsBad:false, decimal:1 },
+        { label:'Handoff a agente', curr:208, prev:177, higherIsBad:true  },
+        { label:'Resueltas por IA', curr:224, prev:191, higherIsBad:false },
+        { label:'Reaperturas',      curr:16,  prev:14,  higherIsBad:true  },
+        { label:'Sin respuesta',    curr:2,   prev:4,   higherIsBad:true  },
+      ],
+      times:{ assign:'41 min', close:'6.2 h', reply:'2.4 h', median:'34 min' },
+      ia_resolution:[
+        { label:'Assumed resolution', pct:50, color:'#9B6FCA' },
+        { label:'Confirmed resolved',  pct:29, color:'#1A6B4A' },
+        { label:'Escalated to human',  pct:17, color:'#C0392B' },
+        { label:'Procedure handoff',   pct:4,  color:'#A497B8' },
+      ],
+      topics:[
+        {label:'Consulta producto',n:88},{label:'Envío / entrega',n:72},
+        {label:'Devolución',n:48},{label:'Pago',n:44},{label:'Suscripción',n:36},
+        {label:'Información médica',n:24},{label:'Reactivar',n:20},
+      ],
+    },
   },
 };
 
+const LOW_CSAT_REAL = [
+  { topic:'Tiempo de respuesta', issue:'El cliente lleva días esperando respuesta y siente que nadie lo atiende.', score:1, remark:'tardan mucho en contestar', ws:'choiz', agent:'ZA', days_ago:31, sentiment:'Neutral', accionables:['Establecer SLA de respuesta máx. 4h en horario hábil','Configurar aviso automático cuando un ticket lleva +2h sin respuesta','Revisar distribución de carga entre agentes'] },
+  { topic:'Proceso de aprobación médica', issue:'El cliente recibió rechazo en su formulario de minoxidil sin explicación clara ni pasos a seguir.', score:1, remark:null, ws:'choiz', agent:'ZA', days_ago:19, sentiment:'Neutral', accionables:['Agregar mensaje automático explicando el motivo de rechazo','Incluir link directo a cómo completar el formulario correctamente','Revisar artículo "Proceso de cobro y aprobación médica"'] },
+  { topic:'Pedido no recibido', issue:'El cliente no recibió su pedido y el agente no pudo darle una solución concreta.', score:1, remark:'no me a llegado mi pedido', ws:'choiz', agent:'ZA', days_ago:30, sentiment:'Neutral', accionables:['Crear protocolo express para pedidos no entregados','Integrar consulta de guía DHL directamente en la conversación','Definir compensación estándar para demoras confirmadas'] },
+  { topic:'Experiencia de producto (App)', issue:'El cliente encontró muy difícil usar la app para gestionar su tratamiento y recomprar.', score:1, remark:'era más sencillo comprar desde la página', ws:'choiz', agent:'ZA', days_ago:31, sentiment:'Negative', accionables:['Revisar flujo de reabasto en la app','Agregar acceso directo a "Comprar tratamiento" desde pantalla principal','Hacer test de usabilidad con pacientes reales'] },
+  { topic:'Handoff a agente humano', issue:'El cliente solicitó hablar con un agente, tardó demasiado o directamente no obtuvo respuesta.', score:1, remark:'Pésima experiencia', ws:'choiz', agent:'CA', days_ago:14, sentiment:'Negative', accionables:['Reducir tiempo de espera para handoff a menos de 30 min','Notificar al cliente cuando un agente se asigna','Revisar horarios de cobertura vs volumen de tickets'] },
+  { topic:'Reactivar tratamiento', issue:'El cliente intentó reactivar su suscripción y no pudo hacerlo fácilmente ni obtuvo seguimiento.', score:1, remark:'para estar esperando a ver a qué hora me contestan, no puedo estar todo el día revisando', ws:'choiz', agent:'ZA', days_ago:31, sentiment:'Negative', accionables:['Agregar notificación push cuando el agente responde','Automatizar el flujo de reactivación sin necesidad de soporte','Crear artículo "Cómo reactivar mi tratamiento en 3 pasos"'] },
+  { topic:'Confirmación de pago', issue:'El cliente no pudo completar el pago o no recibió confirmación después de realizarlo.', score:1, remark:'No pude pagar nunca', ws:'choiz', agent:'CA', days_ago:22, sentiment:'Neutral', accionables:['Automatizar confirmación de pago en menos de 5 min','Agregar estado "Pago recibido" visible en el perfil','Revisar posibles errores en el webhook de pagos'] },
+  { topic:'Cambio de dirección', issue:'El cliente intentó cambiar la dirección de entrega y el proceso fue confuso y mal ejecutado.', score:1, remark:'Se tardan un vergo para contestar', ws:'choiz', agent:'ZA', days_ago:32, sentiment:'Neutral', accionables:['Permitir cambio de dirección desde la app antes del despacho','SLA interno para cambios de dirección: máx. 1h hábil','Confirmar automáticamente cuando el cambio fue exitoso'] },
+  { topic:'Calidad de atención', issue:'El cliente experimentó tiempos muy largos y respuestas incompletas en múltiples sesiones.', score:1, remark:'Las respuestas eran incompletas. En general fue mucho caos y el soporte fue muy malo.', ws:'choiz', agent:'CA', days_ago:10, sentiment:'Negative', accionables:['Implementar checklist de resolución antes de cerrar ticket','Revisar calidad de respuestas de Fin IA en casos de dirección','Capacitar agentes en manejo de casos con múltiples intentos'] },
+  { topic:'Seguimiento de pedido', issue:'El cliente preguntó cuándo llega su pedido y no obtuvo una respuesta con fecha concreta.', score:1, remark:null, ws:'choiz', agent:'CA', days_ago:43, sentiment:'Neutral', accionables:['Activar respuesta automática con link de rastreo DHL','Fin IA debería entregar el número de guía directamente','Evaluar si el artículo "Rastrear tu orden" cubre este caso'] },
+  { topic:'Demora envío (Timeless)', issue:'El envío no llegó en el tiempo prometido y el agente no pudo dar una solución concreta.', score:1, remark:'No me dieron solución', ws:'timeless', agent:'TL', days_ago:4, sentiment:'Negative', accionables:['Definir protocolo para incidencias de envío','Escalar automáticamente si no se resuelve en 24h','Contactar al operador logístico y actualizar al cliente'] },
+  { topic:'Producto incorrecto (Timeless)', issue:'El cliente recibió un producto diferente al que ordenó.', score:2, remark:null, ws:'timeless', agent:'TL', days_ago:7, sentiment:'Neutral', accionables:['Crear flujo express para producto equivocado','Agregar verificación en el picking antes del despacho'] },
+];
+
 // ── STATE ─────────────────────────────────────────────────────────────────
 let wsFilter = 'all';
-let period = 'week';
+let period = 'year';
+let customDateActive = false;
+let currentSnapshot = 'year';
 
-function merged() {
-  // merge choiz + timeless
-  const C = DB.choiz;
-  const T = DB.timeless;
-  return {
-    label: 'Todos',
-    kpis: {
-      total:         { v: C.kpis.total.v + T.kpis.total.v,         prev: C.kpis.total.prev + T.kpis.total.prev,         label:'Total tickets',        higherIsBad:false },
-      abiertas:      { v: C.kpis.abiertas.v + T.kpis.abiertas.v,   prev: C.kpis.abiertas.prev + T.kpis.abiertas.prev,   label:'Abiertas ahora',       higherIsBad:true  },
-      cerradas:      { v: C.kpis.cerradas.v + T.kpis.cerradas.v,   prev: C.kpis.cerradas.prev + T.kpis.cerradas.prev,   label:'Cerradas',             higherIsBad:false },
-      fin_confirmed: { v: C.kpis.fin_confirmed.v + T.kpis.fin_confirmed.v, prev: C.kpis.fin_confirmed.prev + T.kpis.fin_confirmed.prev, label:'IA confirmada', higherIsBad:false },
-      fin_assumed:   { v: C.kpis.fin_assumed.v + T.kpis.fin_assumed.v,     prev: C.kpis.fin_assumed.prev + T.kpis.fin_assumed.prev,     label:'IA asumida',    higherIsBad:false },
-      by_agent:      { v: C.kpis.by_agent.v + T.kpis.by_agent.v,   prev: C.kpis.by_agent.prev + T.kpis.by_agent.prev,   label:'Handoff',              higherIsBad:false },
-    },
-    csat: {
-      avg: +((C.csat.avg + T.csat.avg)/2).toFixed(1),
-      prev_avg: +((C.csat.prev_avg + T.csat.prev_avg)/2).toFixed(1),
-      total: C.csat.total + T.csat.total,
-      positive: C.csat.positive + T.csat.positive,
-      scores: {
-        5: C.csat.scores[5] + T.csat.scores[5],
-        4: C.csat.scores[4] + T.csat.scores[4],
-        3: C.csat.scores[3] + T.csat.scores[3],
-        2: C.csat.scores[2] + T.csat.scores[2],
-        1: C.csat.scores[1] + T.csat.scores[1],
-      },
-      fin_csat: +((C.csat.fin_csat + T.csat.fin_csat)/2).toFixed(1),
-      agents_csat: +((C.csat.agents_csat + T.csat.agents_csat)/2).toFixed(1),
-    },
-    agents: [...C.agents, ...T.agents],
-    vs_week: C.vs_week.map((r,i) => ({
-      label: r.label,
-      curr: r.decimal ? +((r.curr + T.vs_week[i].curr)/2).toFixed(1) : r.curr + T.vs_week[i].curr,
-      prev: r.decimal ? +((r.prev + T.vs_week[i].prev)/2).toFixed(1) : r.prev + T.vs_week[i].prev,
-      higherIsBad: r.higherIsBad,
-      decimal: r.decimal,
-    })),
-    times: C.times,
-    topics: mergeTopics(C.topics, T.topics),
-    ia_resolution: C.ia_resolution.map((r,i) => ({
-      label: r.label,
-      pct: Math.round((r.pct + T.ia_resolution[i].pct)/2),
-      color: r.color,
-    })),
-    low_csat: [...C.low_csat, ...T.low_csat].sort((a,b) => a.score - b.score),
+function getSnap(key) { return SNAPSHOTS[key] || SNAPSHOTS.year; }
+
+function buildWS(snapKey, wsKey) {
+  return { ...getSnap(snapKey)[wsKey],
+    wsBadge: wsKey === 'choiz' ? '<span class="ws-badge-c">Choiz</span>' : '<span class="ws-badge-t">Timeless</span>',
+    low_csat: wsKey === 'choiz' ? LOW_CSAT_REAL : LOW_CSAT_REAL.filter(x => x.ws === 'timeless'),
   };
 }
 
 function mergeTopics(a, b) {
   const map = {};
-  [...a, ...b].forEach(t => { map[t.label] = (map[t.label] || 0) + t.n; });
-  return Object.entries(map).map(([label,n]) => ({label,n})).sort((a,b) => b.n - a.n);
+  [...a,...b].forEach(t => { map[t.label] = (map[t.label]||0) + t.n; });
+  return Object.entries(map).map(([label,n])=>({label,n})).sort((a,b)=>b.n-a.n);
+}
+
+function merged() {
+  const C = buildWS(currentSnapshot, 'choiz');
+  const T = buildWS(currentSnapshot, 'timeless');
+  const mergeKpis = () => {
+    const res = {};
+    for (const k of Object.keys(C.kpis)) {
+      res[k] = { ...C.kpis[k], v: C.kpis[k].v + T.kpis[k].v, prev: C.kpis[k].prev + T.kpis[k].prev };
+    }
+    return res;
+  };
+  return {
+    kpis: mergeKpis(),
+    csat: {
+      avg: +((C.csat.avg + T.csat.avg)/2).toFixed(1),
+      prev_avg: +((C.csat.prev_avg + T.csat.prev_avg)/2).toFixed(1),
+      total: C.csat.total + T.csat.total,
+      positive: C.csat.positive + T.csat.positive,
+      scores: { 5: C.csat.scores[5]+T.csat.scores[5], 4: C.csat.scores[4]+T.csat.scores[4], 3: C.csat.scores[3]+T.csat.scores[3], 2: C.csat.scores[2]+T.csat.scores[2], 1: C.csat.scores[1]+T.csat.scores[1] },
+      fin_csat: +((C.csat.fin_csat + T.csat.fin_csat)/2).toFixed(1),
+      agents_csat: +((C.csat.agents_csat + T.csat.agents_csat)/2).toFixed(1),
+    },
+    agents: [...C.agents, ...T.agents],
+    vs: C.vs.map((r,i) => ({ ...r, curr: r.decimal ? +((r.curr+T.vs[i].curr)/2).toFixed(1) : r.curr+T.vs[i].curr, prev: r.decimal ? +((r.prev+T.vs[i].prev)/2).toFixed(1) : r.prev+T.vs[i].prev })),
+    times: C.times,
+    ia_resolution: C.ia_resolution.map((r,i) => ({ ...r, pct: Math.round((r.pct+T.ia_resolution[i].pct)/2) })),
+    topics: mergeTopics(C.topics, T.topics),
+    low_csat: [...C.low_csat, ...T.low_csat].sort((a,b) => a.score - b.score),
+  };
 }
 
 function data() {
   if (wsFilter === 'all') return merged();
-  return DB[wsFilter];
+  return buildWS(currentSnapshot, wsFilter);
 }
 
 // ── RENDERS ───────────────────────────────────────────────────────────────
@@ -979,7 +1036,8 @@ function renderKPIs(d) {
 
 function renderVs(d) {
   const el = document.getElementById('vs-rows');
-  el.innerHTML = d.vs_week.map(r => {
+  const rows = d.vs || d.vs_week || [];
+  el.innerHTML = rows.map(r => {
     const diff = r.curr - r.prev;
     let arrowEl = '<span class="arr-same">—</span>';
     if (diff !== 0) {
@@ -998,11 +1056,12 @@ function renderVs(d) {
 
 function renderTimes(d) {
   const el = document.getElementById('time-rows');
+  const t = d.times || {};
   const rows = [
-    { label:'Primera asignación (Fin → agente)', choiz:'45 min', tless:'38 min' },
-    { label:'Asignación → cierre por agente',    choiz:'9.2 h',  tless:'5.8 h'  },
-    { label:'Primera respuesta humana',          choiz:'1.8 h',  tless:'2.1 h'  },
-    { label:'Mediana tiempo de respuesta',       choiz:'44 min', tless:'31 min'  },
+    { label:'Primera asignación (Fin → agente)', choiz: t.assign || '—', tless: SNAPSHOTS[currentSnapshot]?.timeless?.times?.assign || '—' },
+    { label:'Asignación → cierre por agente',    choiz: t.close  || '—', tless: SNAPSHOTS[currentSnapshot]?.timeless?.times?.close  || '—' },
+    { label:'Primera respuesta humana',          choiz: t.reply  || '—', tless: SNAPSHOTS[currentSnapshot]?.timeless?.times?.reply  || '—' },
+    { label:'Mediana tiempo de respuesta',       choiz: t.median || '—', tless: SNAPSHOTS[currentSnapshot]?.timeless?.times?.median || '—' },
   ];
   const showC = wsFilter === 'all' || wsFilter === 'choiz';
   const showT = wsFilter === 'all' || wsFilter === 'timeless';
@@ -1204,12 +1263,13 @@ function setWS(ws, btn) {
 function setPeriod(p, btn) {
   period = p;
   customDateActive = false;
+  currentSnapshot = p === 'day' ? 'week' : p;
   document.getElementById('date-clear-btn').style.display = 'none';
   document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const hints = { day:'Hoy, 9 Abril 2026', week:'1 – 9 Abril 2026', month:'Abril 2026' };
+  const hints = { day:'Hoy, 10 Abril 2026', week:'1 – 9 Abril 2026', month:'Marzo 2026', year:'Enero – Abril 2026' };
   document.getElementById('period-hint').textContent = hints[p];
-  renderBanner(data());
+  render();
 }
 
 function doRefresh() {
@@ -1232,23 +1292,19 @@ function setTimestamp() {
 }
 
 // ── CUSTOM DATE RANGE ─────────────────────────────────────────────────────
-let customDateActive = false;
-
 function applyCustomDate() {
   const from = document.getElementById('date-from').value;
   const to   = document.getElementById('date-to').value;
   if (!from || !to) return;
-  if (from > to) {
-    document.getElementById('date-from').style.borderColor = 'var(--danger)';
-    return;
-  }
+  if (from > to) { document.getElementById('date-from').style.borderColor = 'var(--danger)'; return; }
   document.getElementById('date-from').style.borderColor = '';
   customDateActive = true;
 
-  // Deactivate period buttons visually
-  document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+  // Pick snapshot based on range length
+  const days = (new Date(to) - new Date(from)) / 86400000;
+  currentSnapshot = days <= 14 ? 'week' : days <= 60 ? 'month' : 'year';
 
-  // Format display label
+  document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
   const fmt = d => {
     const [y,m,day] = d.split('-');
     const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -1263,13 +1319,14 @@ function applyCustomDate() {
 
 function clearCustomDate() {
   customDateActive = false;
+  currentSnapshot = 'year';
   document.getElementById('date-clear-btn').style.display = 'none';
-  // Restore week as default
-  const weekBtn = document.querySelector('.btn-group button:nth-child(2)');
-  setPeriod('week', weekBtn);
+  const yearBtn = document.querySelector('.btn-group button:last-child');
+  setPeriod('year', yearBtn);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
+currentSnapshot = 'year';
 render();
 setTimestamp();
 </script>
